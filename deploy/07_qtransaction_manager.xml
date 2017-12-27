@@ -1,0 +1,14 @@
+<txnmgr name="responderTxnManager" class="org.jpos.transaction.TransactionManager">
+	<property name="space" value="tspace:default" />
+	<property name="queue" value="responderTransactionManager" />
+	<property name="sessions" value="32" />
+	<property name="retry-interval" value="10000" />	
+    <property name="debug" value="false" /> 		
+    		
+	<participant class="com.company.responder.commutator.SwitchTransaction" logger="Q2" />
+	
+	<group name="ResponderGroup">
+		<participant class="com.company.responder.participant.ResponderProcessor" logger="Q2" />
+	</group>
+	
+</txnmgr>

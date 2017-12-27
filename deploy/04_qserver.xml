@@ -1,0 +1,25 @@
+<!-- Description of relevant configuration properties -->
+<!-- "port" - Port number where the service will be listening. -->
+<!-- "class" - The value "org.jpos.iso.channel.NACChannel" is typically used for package(packager.xml) with "IFB" fields. And "org.jpos.iso.channel.ASCIIChannel" for package(packager.xml) with "IFA" fields. -->
+<!-- "packager" - With the name of the class responsible for packaging and unpacking the ISO message. -->
+<!-- "override-header" - With "false", to not overwrite the header of the ISO message with the value of the "header" property. If the ISO message does not contain header, this property (key and value) should be excluded. -->
+<!-- "header" - With "zeros", representing the width of the ISO message header. If the ISO message does not contain header, this property (key and value) should be excluded. -->
+
+<server name="nac-normal-server" class="org.jpos.q2.iso.QServer" logger="Q2">
+	<attr name="port" type="java.lang.Integer">12000</attr>
+
+	<!-- Example of "NAC Channel" configuration with "header" -->
+	<channel name="nac.normal.channel" class="org.jpos.iso.channel.NACChannel"
+		packager="org.jpos.iso.packager.GenericPackager" override-header="false" header="0000" logger="Q2">
+		<property name="packager-config" value="cfg/packager.xml" />
+	</channel>
+
+	<!-- Example of "ASCII Channel" configuration without "header" -->
+<!-- 	<channel name="nac.normal.channel" class="org.jpos.iso.channel.ASCIIChannel" -->
+<!-- 		packager="org.jpos.iso.packager.GenericPackager" override-header="false" logger="Q2"> -->
+<!-- 		<property name="packager-config" value="cfg/packager.xml" /> -->
+<!-- 	</channel> -->
+
+	<request-listener class="com.company.responder.listener.ResponderListener" logger="Q2" />
+
+</server>
