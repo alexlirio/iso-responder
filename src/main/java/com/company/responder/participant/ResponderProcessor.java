@@ -8,7 +8,6 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.jpos.iso.ISOException;
-import org.jpos.iso.ISOFilter.VetoException;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.ISOSource;
 import org.jpos.iso.ISOUtil;
@@ -23,8 +22,7 @@ import com.company.responder.converter.UtilConverter;
 
 public class ResponderProcessor extends QBeanSupport implements TransactionParticipant, ContextRecovery {
 	
-	private boolean hasJsonFileResponse;
-	private String jsonFileResponse;
+	private boolean useJsonFileResponse;
 	
 	public Serializable recover(long id, Serializable context, boolean commit) {
 		log.info(" - - - - -  recover ResponderProcessor");
@@ -48,8 +46,14 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 		ISOSource isoSource = (ISOSource)myContext.get(CONTEXT.ISOSOURCE);
 		ISOMsg isoResponse = null;
 		
+		//JSON response configurations
+		Long configDelayResponse = null;
+		
 		String transact_id = UUID.randomUUID().toString();
 		log.info(String.format("status=parser_init transaction=%s", transact_id));
+		
+		JSONObject jsonRequest = UtilConverter.getJSON(isoRequest);
+		log.info(String.format("JSON REQUESTED: %s", jsonRequest));
 		
 		Properties prop = new Properties();
 		InputStream input = null;
@@ -57,7 +61,7 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 		try {
 			input = new FileInputStream("cfg/config.properties");
 			prop.load(input);
-			jsonFileResponse = prop.getProperty("json_file_response");
+			useJsonFileResponse = Boolean.parseBoolean(prop.getProperty("use_json_file_response"));
 		} catch (IOException e) {
 			log.error(e.getClass().getSimpleName() + " in " + this.getClass().getSimpleName() , e);
 			e.printStackTrace();
@@ -71,35 +75,39 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 				}
 			}
 		}
+		log.info(String.format("Use JSON File Response = %s", useJsonFileResponse));
 		
-		hasJsonFileResponse = jsonFileResponse != null && jsonFileResponse.trim().length() > 0;
-		
-		if (hasJsonFileResponse) {
-			log.info(String.format("JSON File Response = %s", jsonFileResponse));
-		}
-		
-		log.info(String.format("JSON REQUESTED: %s", UtilConverter.getJSON(isoRequest).toString()));
-		
-		if (hasJsonFileResponse) {
-			String isoHeader = null;
-			JSONObject jsonResponse = UtilConverter.getJSON(jsonFileResponse);
+		if (useJsonFileResponse) {
 			
-			if (jsonResponse.containsKey("header")) {
-				isoHeader = (String)jsonResponse.get("header");
-				jsonResponse.remove("header");
-			}
+			String isoHeader = null;
+			
+			JSONObject jsonResponse = UtilConverter.getJSON(UtilConverter.JSON_FILE_RESPONSE);
+			log.info(String.format("JSON File Response Content = %s", jsonResponse));
+			
+			//Get the correct "JSON Response" from "JSON Response File"
+			jsonResponse = UtilConverter.getJSON(jsonResponse, jsonRequest);
+			
+			//Merge equals fields to response
+			jsonResponse = UtilConverter.mergeJSONs(jsonRequest, jsonResponse);
+			
+			//Set JSON response configurations
+			configDelayResponse = (Long)jsonResponse.get(UtilConverter.ISO_CONFIG_SLEEP) == null ? 0 : (Long)jsonResponse.remove(UtilConverter.ISO_CONFIG_SLEEP);
+			log.info(String.format("JSON Response Content = %s", jsonResponse));
+			
+			isoHeader = (String)jsonResponse.remove("header");
 			
 			isoResponse = UtilConverter.getISO(jsonResponse);
 			
+			//Set ISO Header response
 			if (isoHeader != null) {
 				if (isoRequest.getHeader() == null || ISOUtil.str2bcd(isoHeader, true).length != isoRequest.getHeader().length) {
-					log.warn("JSON File Response with 'header' length different of ISO Request. ISO Header from ISO Request used for ISO Response.");
+					log.warn("JSON Response with 'header' length different of ISO Request. ISO Header from Request will be use.");
 					isoResponse.setHeader(isoRequest.getHeader());
 				} else {
 					isoResponse.setHeader(ISOUtil.str2bcd(isoHeader, true));
 				}
 			} else {
-				log.info("JSON File Response without 'header'. ISO Header from ISO Request used for ISO Response.");
+				log.info("JSON Response without 'header'. ISO Header Request will be use.");
 				isoResponse.setHeader(isoRequest.getHeader());
 			}
 			
@@ -113,18 +121,17 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 			}
 		}
 		
-		log.info(String.format("JSON RESPONSED: %s", UtilConverter.getJSON(isoResponse).toString()));
+		log.info(String.format("JSON RESPOND: %s", UtilConverter.getJSON(isoResponse).toString()));
 		
 		try {
+			//Verify "delayResponse"
+			log.info(String.format("Respond delay is %s milliseconds.", configDelayResponse));
+			Thread.sleep(configDelayResponse);
+			
 			isoSource.send(isoResponse);
 			((Context) context).checkPoint("INI - SendResponse");
-		} catch (VetoException e) {
-			e.printStackTrace();
-			return ABORTED;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return ABORTED;
-		} catch (ISOException e) {
+		} catch (IOException | ISOException | InterruptedException e) {
+			log.error(e.getClass().getSimpleName() + " in " + this.getClass().getSimpleName() , e);
 			e.printStackTrace();
 			return ABORTED;
 		}

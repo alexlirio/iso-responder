@@ -3,16 +3,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.company</groupId>
 	<artifactId>iso-responder</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
+	
 	<build>
 	
 		<finalName>${project.artifactId}</finalName>
-	
+		
 		<plugins>
 		
 			<plugin>
@@ -24,12 +24,13 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-		
+			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.0.2</version>
 				<configuration>
+					<finalName>${project.artifactId}</finalName>
 					<archive>
 						<manifestEntries>
 							<Class-Path>cfg/deploy/</Class-Path>
@@ -66,7 +67,7 @@
 		</plugins>
 		
 	</build>
-
+	
 	<dependencies>
 	
 		<dependency>
@@ -87,6 +88,18 @@
 			<version>1.2.17</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlet</artifactId>
+			<version>9.4.9.v20180320</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-servlet-core</artifactId>
+			<version>2.25.1</version>
+		</dependency>
+		
 	</dependencies>
-
+	
 </project>

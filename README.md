@@ -1,34 +1,82 @@
 ## Project ISO 8583 Responder
 
-The Project ISO 8583 Responder receives and responses messages in ISO 8583 format. To check the content of messages, it is logged in JSON format. 
+The Project ISO 8583 Responder receive and respond ISO 8583 messages. The content of messages is logging as ISO and JSON formats. 
 
 
 ## Installation
 
 1. Download the Git repository project: [iso-responder](https://github.com/alexlirio/iso-responder.git)
-2. To create the project's zip package, run the following maven command in the project's root folder: "mvn clean package".
-3. The package is created in the project folder as: "target/iso-responder.zip". This file can be extracted anywhere.
+2. To create the project's package, run the following maven command in the project's path: "mvn clean package".
+3. The package will be create in the project's path as: "target/iso-responder.zip". This file can be extracted anywhere.
 
 
-## Required Configuration
+## Required Configuration Files
 
-For operation it is necessary to configure the following files:
-
-1. ** cfg/packager.xml**, with the ISO packager used in the application that will send the ISO message.
-2. ** cfg/config.properties **, with the values needed to send the ISO message. Each property is commented on in the file, with its respective function.
-3. ** deploy/04_qserver.xml **, with the values of "port", "packager" and "header". Each property is commented on in the file, with its respective function.
+* ** cfg/packager.xml **, with the ISO packager. It's the same ISO packager of application used to send requests.
+* ** cfg/config.properties **, with valid values to each property. The file contains comments to help about each property.
+* ** deploy/04_qserver.xml **, with valid values to: "port", "packager" and "header". The file contains comments to help about each property.
 
 
-## Use
+## Starting the Service
 
-Use of responder:
+	$ java -jar iso-responder.jar
 
-1. To start the service, leaving it ready to respond to requests, simply execute the following command:
 
-		java -jar iso-responder-0.0.1.jar
-		
+## Configuring Sample Responses
+
+HTTP GET - To see configured responses:
+
+	http://127.0.0.1:9080/responder-rest-listener/response-file
+
+
+HTTP POST - To save configured responses:
+
+	http://127.0.0.1:9080/responder-rest-listener/response-file
+
+```json
+{"responses":[
+	{
+		"header":"0000000000",
+		"0":"0210",
+		"3":"009500",
+		"11":"000001",
+		"12":"235959",
+		"13":"1231",
+		"39":"00",
+		"41":"POS80217",
+		"42":"000000000083917",
+		"61.1":"21",
+		"61.2":"999999999",
+		"61.3":"TEST001",
+		"62":"1.00b01p01#9.51b27#PWWIN#ECF4BBFBC1C2"
+	},
+	{
+		"header":"0000000000",
+		"0":"0230",
+		"3":"equals",
+		"11":"equals",
+		"12":"equals",
+		"13":"equals",
+		"39":"00",
+		"41":"equals",
+		"42":"equals",
+		"62":"equals",
+		"CONFIG_SLEEP":60000,
+		"CONFIG_FILTER":{"0":"..2.","3":"009500"}
+	}
+]}
+```
+
+These "responses" may contain:
+1. ** "header" ** (with same header size configured in "deploy/04_qserver.xml").  
+2. ** "fields" ** with value to response or "equals" to return the same value of request.  
+3. ** "CONFIG_SLEEP" ** to milliseconds delay before response.  
+4. ** "CONFIG_FILTER" ** to configure an specific response to each request using regex.  
+
 
 ## API Reference
 
-www.jpos.org
+* [jpos.org](http://www.jpos.org/)
+* [wikipedia.org/wiki/iso8583](https://en.wikipedia.org/wiki/ISO_8583)
+* [docs.oracle.com/regex](https://docs.oracle.com/javase/tutorial/essential/regex/index.html)
 

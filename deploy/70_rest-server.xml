@@ -1,0 +1,4 @@
+<qbean name="rest-server" class="com.company.responder.rest.QRestServer" logger="Q2">
+	<attr name="port" type="java.lang.Integer">9080</attr>
+	<rest-listener class="com.company.responder.rest.listener.ResponderRestListener" logger="Q2"></rest-listener>
+</qbean>

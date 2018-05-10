@@ -3,6 +3,7 @@ package com.company.responder.converter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -16,6 +17,7 @@ import org.jpos.iso.ISOBitMap;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOField;
 import org.jpos.iso.ISOMsg;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -24,6 +26,13 @@ import org.json.simple.parser.ParseException;
 public class UtilConverter {
 	
 	private final static Logger log = Logger.getLogger(UtilConverter.class);
+	
+	public final static String JSON_FILE_RESPONSE = "cfg/response.json";
+	
+	public final static String ISO_REPONSES = "responses";
+	public final static String ISO_FIELD_EQUALS = "queals";
+	public final static String ISO_CONFIG_SLEEP = "CONFIG_SLEEP";
+	public final static String ISO_CONFIG_FILTER = "CONFIG_FILTER";
 	
 	public static ISOMsg getISO(JSONObject json) {
 		
@@ -35,7 +44,7 @@ public class UtilConverter {
 			String value = json.get(key).toString();
 
 			if (Pattern.compile("^([\\d]{1,3})([\\.]{1}[\\d]{1,3})*$").matcher(key).matches()) {
-				//Key válida para ISO 
+				//Key valid to ISO field
 				try {
 					isoMsg.set(key, value);
 				} catch (ISOException e) {
@@ -128,4 +137,55 @@ public class UtilConverter {
 		return fields;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static JSONObject mergeJSONs(JSONObject jsonRequest, JSONObject jsonResponse) {
+		ArrayList<String> keysToRemove = new ArrayList<String>(); 
+		Iterator<?> iterator = jsonResponse.keySet().iterator();
+		while (iterator.hasNext()) {
+			String key = (String)iterator.next();
+			String value = jsonResponse.get(key).toString();
+			if (value.equalsIgnoreCase(ISO_FIELD_EQUALS)) {
+				if (jsonRequest.containsKey(key)) {
+					jsonResponse.replace(key, jsonRequest.get(key));
+				} else {
+					keysToRemove.add(key);
+				}
+			}
+		}
+		for (String key : keysToRemove) {
+			jsonResponse.remove(key);
+		}
+		return jsonResponse;
+	}
+	
+	public static JSONObject getJSON(JSONObject jsonResponse, JSONObject jsonRequest) {
+		JSONObject ret = null;
+		Iterator<?> i = ((JSONArray)jsonResponse.get(UtilConverter.ISO_REPONSES)).iterator();
+		while (i.hasNext()) {
+			jsonResponse = (JSONObject)i.next();
+			if (!jsonResponse.containsKey(UtilConverter.ISO_CONFIG_FILTER)) {
+				ret = jsonResponse;
+			} else if (isJSONRequestLikePattern(jsonRequest, (JSONObject)jsonResponse.get(UtilConverter.ISO_CONFIG_FILTER))) {
+				jsonResponse.remove(UtilConverter.ISO_CONFIG_FILTER);
+				ret = jsonResponse;
+			}
+		}
+		return ret;
+	}
+	
+	private static boolean isJSONRequestLikePattern(JSONObject jsonRequest, JSONObject jsonRequestPattern) {
+		boolean ret = false;
+		Iterator<?> iterator = jsonRequestPattern.keySet().iterator();
+		while (iterator.hasNext()) {
+			String key = (String)iterator.next();
+			String value = jsonRequestPattern.get(key).toString();
+			if (jsonRequest.containsKey(key) && jsonRequest.get(key).toString().matches(value)) {
+				ret = true;
+			} else {
+				return false;
+			}
+		}
+		return ret;
+	}
+	
 }

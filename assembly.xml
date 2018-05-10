@@ -28,15 +28,15 @@
 				<include>*.*</include>
 			</includes>
 		</fileSet>
+		<fileSet>
+			<directory>${project.basedir}/target/</directory>
+			<outputDirectory></outputDirectory>
+			<includes>
+				<include>${artifactId}.${packaging}</include>
+			</includes>
+		</fileSet>
 	</fileSets>
 	<dependencySets>
-		<dependencySet>
-			<outputDirectory>/</outputDirectory>
-			<scope>runtime</scope>
-			<includes>
-				<include>com.company:iso-responder</include>
-			</includes>
-		</dependencySet>
 		<dependencySet>
 			<outputDirectory>/lib/</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
