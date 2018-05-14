@@ -30,7 +30,7 @@ public class UtilConverter {
 	public final static String JSON_FILE_RESPONSE = "cfg/response.json";
 	
 	public final static String ISO_REPONSES = "responses";
-	public final static String ISO_FIELD_EQUALS = "queals";
+	public final static String ISO_FIELD_EQUALS = "equals";
 	public final static String ISO_CONFIG_SLEEP = "CONFIG_SLEEP";
 	public final static String ISO_CONFIG_FILTER = "CONFIG_FILTER";
 	
