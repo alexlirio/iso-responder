@@ -25,7 +25,7 @@
 		"41":"equals",
 		"42":"equals",
 		"62":"equals",
-		"CONFIG_SLEEP":60000,
+		"CONFIG_SLEEP":15000,
 		"CONFIG_FILTER":{"0":"..2.","3":"009500"}
 	}
 ]}

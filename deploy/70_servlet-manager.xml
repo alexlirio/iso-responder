@@ -1,0 +1,5 @@
+<qbean name="servlet-server" class="com.company.responder.servlet.QServletServer" logger="Q2">
+	<property name="port" value="9080" />
+	<property name="context-path" value="/iso-responder" />
+	<rest-listener class="com.company.responder.servlet.FileServlet" logger="Q2" />
+</qbean>

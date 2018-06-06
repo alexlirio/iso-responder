@@ -1,8 +1,8 @@
 package com.company.responder.converter;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -17,17 +17,14 @@ import org.jpos.iso.ISOBitMap;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOField;
 import org.jpos.iso.ISOMsg;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class UtilConverter {
 	
 	private final static Logger log = Logger.getLogger(UtilConverter.class);
-	
-	public final static String JSON_FILE_RESPONSE = "cfg/response.json";
 	
 	public final static String ISO_REPONSES = "responses";
 	public final static String ISO_FIELD_EQUALS = "equals";
@@ -61,22 +58,13 @@ public class UtilConverter {
 	}
 	
 	public static JSONObject getJSON(String filename) {
-		
 		JSONObject json = new JSONObject();
-		
 		try {
-			json = (JSONObject)new JSONParser().parse(new FileReader(filename));
-		} catch (FileNotFoundException e) {
-			log.error(e.getClass().getSimpleName() + " in " + UtilConverter.class.getClass().getName() , e);
-			e.printStackTrace();
-		} catch (IOException e) {
-			log.error(e.getClass().getSimpleName() + " in " + UtilConverter.class.getClass().getName() , e);
-			e.printStackTrace();
-		} catch (ParseException e) {
+			json = new JSONObject(new String(Files.readAllBytes(Paths.get(filename))));
+		} catch (JSONException | IOException e) {
 			log.error(e.getClass().getSimpleName() + " in " + UtilConverter.class.getClass().getName() , e);
 			e.printStackTrace();
 		}
-
 		return json;
 	}
 
@@ -85,6 +73,7 @@ public class UtilConverter {
 		return new JSONObject(fieldsMap);
 	}
 
+	@SuppressWarnings("rawtypes")
 	private static Map<String, String> getIsoFieldsMap(ISOMsg isoMsg) {
 		
 		Map<String, String> fields = new TreeMap<String, String>();
@@ -112,6 +101,7 @@ public class UtilConverter {
 		return fields;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private static Map<String, String> getIsoSubFieldsMap(String idField, ISOMsg isoMsg, Map<String, String> fields) {
 		
 		Iterator fieldsInterator = isoMsg.getChildren().entrySet().iterator();
@@ -136,17 +126,16 @@ public class UtilConverter {
 		
 		return fields;
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	public static JSONObject mergeJSONs(JSONObject jsonRequest, JSONObject jsonResponse) {
 		ArrayList<String> keysToRemove = new ArrayList<String>(); 
-		Iterator<?> iterator = jsonResponse.keySet().iterator();
+		Iterator<?> iterator = jsonResponse.keys();
 		while (iterator.hasNext()) {
 			String key = (String)iterator.next();
 			String value = jsonResponse.get(key).toString();
 			if (value.equalsIgnoreCase(ISO_FIELD_EQUALS)) {
-				if (jsonRequest.containsKey(key)) {
-					jsonResponse.replace(key, jsonRequest.get(key));
+				if (jsonRequest.has(key)) {
+					jsonResponse.put(key, jsonRequest.get(key));
 				} else {
 					keysToRemove.add(key);
 				}
@@ -160,10 +149,10 @@ public class UtilConverter {
 	
 	public static JSONObject getJSON(JSONObject jsonResponse, JSONObject jsonRequest) {
 		JSONObject ret = null;
-		Iterator<?> i = ((JSONArray)jsonResponse.get(UtilConverter.ISO_REPONSES)).iterator();
+		Iterator<?> i = ((JSONArray)jsonResponse.get(UtilConverter.ISO_REPONSES)).iterator(); 
 		while (i.hasNext()) {
 			jsonResponse = (JSONObject)i.next();
-			if (!jsonResponse.containsKey(UtilConverter.ISO_CONFIG_FILTER)) {
+			if (!jsonResponse.has(UtilConverter.ISO_CONFIG_FILTER)) {
 				ret = jsonResponse;
 			} else if (isJSONRequestLikePattern(jsonRequest, (JSONObject)jsonResponse.get(UtilConverter.ISO_CONFIG_FILTER))) {
 				jsonResponse.remove(UtilConverter.ISO_CONFIG_FILTER);
@@ -179,7 +168,7 @@ public class UtilConverter {
 		while (iterator.hasNext()) {
 			String key = (String)iterator.next();
 			String value = jsonRequestPattern.get(key).toString();
-			if (jsonRequest.containsKey(key) && jsonRequest.get(key).toString().matches(value)) {
+			if (jsonRequest.has(key) && jsonRequest.get(key).toString().matches(value)) {
 				ret = true;
 			} else {
 				return false;

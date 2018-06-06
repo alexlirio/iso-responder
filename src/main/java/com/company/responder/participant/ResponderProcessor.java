@@ -15,7 +15,7 @@ import org.jpos.q2.QBeanSupport;
 import org.jpos.transaction.Context;
 import org.jpos.transaction.ContextRecovery;
 import org.jpos.transaction.TransactionParticipant;
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 
 import com.company.responder.context.CONTEXT;
 import com.company.responder.converter.UtilConverter;
@@ -47,7 +47,7 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 		ISOMsg isoResponse = null;
 		
 		//JSON response configurations
-		Long configDelayResponse = null;
+		Integer configDelayResponse = null;
 		
 		String transact_id = UUID.randomUUID().toString();
 		log.info(String.format("status=parser_init transaction=%s", transact_id));
@@ -81,7 +81,7 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 			
 			String isoHeader = null;
 			
-			JSONObject jsonResponse = UtilConverter.getJSON(UtilConverter.JSON_FILE_RESPONSE);
+			JSONObject jsonResponse = UtilConverter.getJSON("cfg/responses.json");
 			log.info(String.format("JSON File Response Content = %s", jsonResponse));
 			
 			//Get the correct "JSON Response" from "JSON Response File"
@@ -91,7 +91,7 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 			jsonResponse = UtilConverter.mergeJSONs(jsonRequest, jsonResponse);
 			
 			//Set JSON response configurations
-			configDelayResponse = (Long)jsonResponse.get(UtilConverter.ISO_CONFIG_SLEEP) == null ? 0 : (Long)jsonResponse.remove(UtilConverter.ISO_CONFIG_SLEEP);
+			configDelayResponse = (Integer)jsonResponse.opt(UtilConverter.ISO_CONFIG_SLEEP) == null ? 0 : (Integer)jsonResponse.remove(UtilConverter.ISO_CONFIG_SLEEP);
 			log.info(String.format("JSON Response Content = %s", jsonResponse));
 			
 			isoHeader = (String)jsonResponse.remove("header");

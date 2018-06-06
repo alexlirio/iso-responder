@@ -12,6 +12,7 @@ import com.company.responder.context.CONTEXT;
 
 public class ResponderListener extends QBeanSupport implements ISORequestListener {
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean process(ISOSource source, ISOMsg mRequest) {
 		
 		log.info(" - - - - -  process ResponderListener");

@@ -26,12 +26,12 @@ The Project ISO 8583 Responder receive and respond ISO 8583 messages. The conten
 
 HTTP GET - To see configured responses:
 
-	http://127.0.0.1:9080/responder-rest-listener/response-file
+	http://127.0.0.1:9080/iso-responder/file-servlet?file=cfg/response.json
 
 
 HTTP POST - To save configured responses:
 
-	http://127.0.0.1:9080/responder-rest-listener/response-file
+	http://127.0.0.1:9080/iso-responder/file-servlet?file=cfg/response.json
 
 ```json
 {"responses":[
