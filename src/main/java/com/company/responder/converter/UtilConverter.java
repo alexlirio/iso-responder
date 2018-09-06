@@ -1,12 +1,17 @@
 package com.company.responder.converter;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
@@ -21,13 +26,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.github.mustachejava.Code;
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
+
 
 public class UtilConverter {
 	
 	private final static Logger log = Logger.getLogger(UtilConverter.class);
 	
 	public final static String ISO_REPONSES = "responses";
-	public final static String ISO_FIELD_EQUALS = "equals";
 	public final static String ISO_CONFIG_SLEEP = "CONFIG_SLEEP";
 	public final static String ISO_CONFIG_FILTER = "CONFIG_FILTER";
 	
@@ -128,21 +137,44 @@ public class UtilConverter {
 	}
 	
 	public static JSONObject mergeJSONs(JSONObject jsonRequest, JSONObject jsonResponse) {
-		ArrayList<String> keysToRemove = new ArrayList<String>(); 
+		HashMap<String, Object> scopes = new HashMap<String, Object>();
+		StringWriter writer = new StringWriter();
+		MustacheFactory mf = new DefaultMustacheFactory();
+		Mustache mustache = mf.compile(new StringReader(jsonResponse.toString()), "mustacheResult");
+		
+		// Verify each 'mustache tag(example {{4}})' to replace value. 
+		Code[] codes = mustache.getCodes();
+		for (Code code : codes) {
+		    if (code.getName() != null) {
+	    		if (jsonRequest.has(code.getName())) {
+	    			scopes.put(code.getName(), jsonRequest.get(code.getName()));
+	    		}
+		    }			
+		}
+		mustache.execute(writer, scopes);
+		jsonResponse = new JSONObject(writer.toString());
+        writer.flush();
+		
+		return jsonResponse;
+	}
+	
+	public static JSONObject replaceTagFields(JSONObject jsonRequest, JSONObject jsonResponse) {
 		Iterator<?> iterator = jsonResponse.keys();
 		while (iterator.hasNext()) {
-			String key = (String)iterator.next();
+			String key = (String) iterator.next();
 			String value = jsonResponse.get(key).toString();
-			if (value.equalsIgnoreCase(ISO_FIELD_EQUALS)) {
-				if (jsonRequest.has(key)) {
-					jsonResponse.put(key, jsonRequest.get(key));
-				} else {
-					keysToRemove.add(key);
+
+			// TAG "<currency>"
+			if (value.contains("<currency>")) {
+				Pattern p = Pattern.compile("<currency>(.+?)</currency>");
+				Matcher m = p.matcher(value);
+				while (m.find()) {
+					String tag = m.group(1);
+					value = value.replace("<currency>" + tag + "</currency>", NumberFormat.getInstance(new Locale("pt", "BR")).format(Double.parseDouble(tag) / 100));
 				}
+				jsonResponse.put(key, value);
 			}
-		}
-		for (String key : keysToRemove) {
-			jsonResponse.remove(key);
+
 		}
 		return jsonResponse;
 	}
@@ -176,5 +208,5 @@ public class UtilConverter {
 		}
 		return ret;
 	}
-	
+
 }

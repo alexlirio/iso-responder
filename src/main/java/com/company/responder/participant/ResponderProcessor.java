@@ -87,8 +87,11 @@ public class ResponderProcessor extends QBeanSupport implements TransactionParti
 			//Get the correct "JSON Response" from "JSON Response File"
 			jsonResponse = UtilConverter.getJSON(jsonResponse, jsonRequest);
 			
-			//Merge equals fields to response
+			//Merge fields to response
 			jsonResponse = UtilConverter.mergeJSONs(jsonRequest, jsonResponse);
+			
+			//Replace TAG fields 
+			jsonResponse = UtilConverter.replaceTagFields(jsonRequest, jsonResponse);
 			
 			//Set JSON response configurations
 			configDelayResponse = (Integer)jsonResponse.opt(UtilConverter.ISO_CONFIG_SLEEP) == null ? 0 : (Integer)jsonResponse.remove(UtilConverter.ISO_CONFIG_SLEEP);

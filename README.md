@@ -53,14 +53,14 @@ HTTP POST - To save configured responses:
 	{
 		"header":"0000000000",
 		"0":"0230",
-		"3":"equals",
-		"11":"equals",
-		"12":"equals",
-		"13":"equals",
+		"3":"{{3}}",
+		"11":"{{11}}",
+		"12":"{{12}}",
+		"13":"{{13}}",
 		"39":"00",
-		"41":"equals",
-		"42":"equals",
-		"62":"equals",
+		"41":"{{41}}",
+		"42":"{{42}}",
+		"62":"1.00b01p01#9.51b27#PWWIN#ECF4BBFBC1C2#{{3}}#{{61.5}}#<currency>{{4}}</currency>",
 		"CONFIG_SLEEP":60000,
 		"CONFIG_FILTER":{"0":"..2.","3":"009500"}
 	}
@@ -69,7 +69,7 @@ HTTP POST - To save configured responses:
 
 These "responses" may contain:
 1. ** "header" ** (with same header size configured in "deploy/04_qserver.xml").  
-2. ** "fields" ** with value to response or "equals" to return the same value of request.  
+2. ** "fields" ** with value to response or a "mustache tag" to return the same value field of request. Example: "{{4}}"  
 3. ** "CONFIG_SLEEP" ** to milliseconds delay before response.  
 4. ** "CONFIG_FILTER" ** to configure an specific response to each request using regex.  
 
